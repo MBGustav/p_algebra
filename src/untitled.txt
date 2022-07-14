@@ -1,0 +1,15 @@
+for (j = 0; j < dimensionSize; j++) {
+2 float sum = 0;
+3 for (k = 0; k < j; k++) {
+4 sum += L[j][k] * L[j][k];
+5 }
+6 L[j][j] = sqrt(A[j][j] - sum);<-----
+7
+8 for (i = j + 1; i < dimensionSize; i++) {
+9 sum = 0;
+10 for (k = 0; k < j; k++) {
+11 sum += L[i][k] * L[j][k];
+12 }
+13 L[i][j] = (1.0 / L[j][j] * (A[i][j] - sum));
+14 }
+15 }
