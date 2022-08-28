@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <vector>
 #include <iomanip>
@@ -13,21 +12,8 @@
 #define LIBMAT_HPP
 
 
-#define PRECISION 4
-#define WIDTH (PRECISION + 1)
-
-
-using namespace sycl;
-
-
-typedef std::vector<double> DVector;
-typedef std::vector<int> IVector;
-//typedef static_cast<unsigned long> stt_cast;
-
-
-
 // C = alpha(A x B) + beta(C)
-bool times_m(const Matrix &A, const Matrix &B, Matrix &C, double alpha=1.0, double beta = 0.0)
+bool times_m( Matrix &A,  Matrix &B, Matrix &C, double alpha=1.0, double beta = 0.0)
 {
 
     // check sizes:
@@ -52,6 +38,51 @@ bool times_m(const Matrix &A, const Matrix &B, Matrix &C, double alpha=1.0, doub
     return true;
 }
 
+void equalpart_m(Matrix &A, int i_0, int j_0, Matrix &B) {
+        int nrA, ncA, nrB, ncB;
+        int nr_f, nc_f;
+        int i_A,j_A, i_B, j_B;
+        
+
+        nrA = A.n_row;
+        ncA = A.n_col;
+        nrB = B.n_row;
+        ncB = B.n_col;
+
+        nr_f = (i_0 + nrB);  // final row
+        nc_f = (j_0 + ncB);  // final column
+
+        for (i_A = i_0, i_B =0; i_A < nr_f; i_A++, i_B++) {
+                for (j_A = j_0, j_B = 0; j_A < nc_f; j_A++, j_B++) {
+                        A.elem[i_A*ncA + j_A] = B.elem[i_B*ncB + j_B];
+                }
+        }
+
+}
+
+void getpart_m(Matrix &A, int i_0, int j_0, Matrix &B) {
+
+        int nrA, ncA, nrB, ncB;
+        int nr_f, nc_f;
+        int i_A,j_A, i_B, j_B;
+        double *pA, *pB;
+
+        nrA = A.n_row;
+        ncA = A.n_col;
+        nrB = B.n_row;
+        ncB = B.n_col;
+
+        nr_f = (i_0 + nrB);  // final row
+        nc_f = (j_0 + ncB);  // final column
+
+        for (i_A = i_0, i_B =0; i_A < nr_f; i_A++, i_B++) {
+                for (j_A = j_0, j_B = 0; j_A < nc_f; j_A++, j_B++) {
+                         B.elem[i_B*ncB + j_B] = A.elem[i_A*ncA + j_A];
+                }
+        }
+
+}
+
 bool timesc_m(double val, Matrix &A, Matrix &R)
 {
     if (A.size() != R.size())
@@ -66,15 +97,19 @@ bool timesc_m(double val, Matrix &A, Matrix &R)
 
 void print_m(const Matrix &A)
 {
-    for (long int i = 0; i < A.n_row; i++)
+
+
+
+    for ( int i = 0; i < A.n_row; i++)
     {
-        for (long int j = 0; j < A.n_col; j++)
+        for ( int j = 0; j < A.n_col; j++)
         {
-            std::cout << std::setw(WIDTH) << std::setprecision(PRECISION) << A.elem[i * A.n_col + j] << " ";
+            std::cout << A.at(i,j) << " ";
         }
         std::cout << "\n";
     }
     std::cout << "\n";
+    
 }
 
 
@@ -310,7 +345,7 @@ void givens_m(Matrix &A, Matrix &R)
 }
 
 
-bool cholesky(Matrix &A, Matrix &L, double alpha = 1.0)
+bool cholesky(Matrix *A, Matrix *L, double alpha = 1.0)
 {
 
     //if (!A.is_symmetric())
@@ -320,8 +355,8 @@ bool cholesky(Matrix &A, Matrix &L, double alpha = 1.0)
     //}
     double sum;
     long int i, j, k;
-    auto n = A.n_row;
-    L.zeros();
+    auto n = A->n_row;
+    L->zeros();
 
     for (i = 0; i < n; i++)
     {
@@ -331,14 +366,14 @@ bool cholesky(Matrix &A, Matrix &L, double alpha = 1.0)
             if (i == j)//diagonals
             {
                 for(k= 0; k < j; k++)
-                    sum+= pow(L.elem[n*j+k], 2);
-                L.elem[n*j+j] =  sqrt(A.elem[n*j+j]-sum);
+                    sum+= pow(L->elem[n*j+k], 2);
+                L->elem[n*j+j] =  sqrt(alpha * A->elem[n*j+j]-sum);
                 
             } else {
                 //Evaluate L(i,j) using L(j, j)
                 for(k = 0; k < j; k++)
-                    sum+= L.elem[n*i+k] * L.elem[n*j+k];
-                L.elem[n*i+j] = (A.elem[n*i+j] - sum)/L.elem[n*j+j];
+                    sum+= L->elem[n*i+k] * L->elem[n*j+k];
+                L->elem[n*i+j] = (alpha * A->elem[n*i+j] - sum)/L->elem[n*j+j];
 
             }
                 
@@ -347,378 +382,22 @@ bool cholesky(Matrix &A, Matrix &L, double alpha = 1.0)
     
     return true;
 }
-    
-
-
-/* 
-####################################
-        parallel Library
-#################################### 
-*/
-
-// C = alpha(A ) +beta(B)
-bool sum_m(sycl::queue &q, Matrix &A, Matrix &B, Matrix &C, double alpha = 1.0, double beta = 1.0){
-    
-    //if(!A.equal_dim(B) or !A.equal_dim(C)) return false;
-    
-    //Range of vectors to sum
-    sycl::range<1> num_items{A.elem.size()};
-    DVector scal_vector = {alpha, beta};
-    
-    //hold data shared between host and devices
-    sycl::buffer a_buf(A.elem);
-    sycl::buffer b_buf(B.elem);
-    sycl::buffer c_buf(C.elem.data(), num_items);
-    
-    //scalar vector
-    sycl::buffer scal_buf(scal_vector);
-        
-    
-    //Submit data by lambda function, contains data access permition
-     q.submit([&](handler &h) {
-         sycl::accessor a(a_buf, h, read_only);
-         sycl::accessor b(b_buf, h, read_only);
-         sycl::accessor c(c_buf, h, write_only, no_init);
-         
-         //buff scalar
-         sycl::accessor scal(scal_buf, h, read_only);
-         
-         h.parallel_for(num_items, [=](auto i){
-             c[i] = scal[0] * a[i] + scal[1] * b[i];
-         });
-         
-    });
-    // Wait until compute tasks on GPU done
-    q.wait();     
-    
-    return true;    
-}
-
-
-bool times_m(sycl::queue &q, const Matrix &A, const Matrix &B, Matrix &C, double alpha=1.0, double beta = 0.0)
-{
-    
-    //if(!A.equal_dim(B) or !A.equal_dim(C)) return false;
-    
-    //Range of vectors to sum
-    size_t size_col = A.elem.size()/A.n_row;
-    size_t size_row = A.elem.size()/A.n_col;
-    
-    sycl::range<2> num_items{size_col, size_row};
-    DVector scal_vector = {alpha, beta};
-    
-    int width = A.n_row;
-    //hold data shared between host and devices, 
-    //converted in 2D matrices: range(col, row)
-    sycl::buffer<double,2> a_buf = {A.elem.data(), num_items};
-    sycl::buffer<double,2> b_buf = {B.elem.data(), num_items};
-    sycl::buffer<double,2> c_buf = {C.elem.data(), num_items};
-    
-    //create a sub-buffer with a_but converting in 2 dimensional buff
-    
-    //buffer b11{a_buf, id{0, 0}, range{size_row, size_col}};
-        
-    //hold scalar values 
-    sycl::buffer scal_buf(scal_vector);
-    
-    q.submit([&](handler &h){
-        sycl::accessor a(a_buf, h, read_only);
-        sycl::accessor b(b_buf, h, read_only);
-        sycl::accessor c(c_buf, h, write_only, no_init);
-        h.parallel_for(num_items, [=](auto idx){
-             int row = idx[0]; 
-             int col = idx[1];
-             double sum = 0.0f;  
-             for(int i = 0; i < width; i++){
-                 sum+= a[row][i] * b[i][col];
-             }
-             c[idx] = sum;
-         });
-             
-    });
-    // Wait until compute tasks on GPU done
-    q.wait();
-    
-    //Submit data by lambda function, contains data access permition     
-    
-    return true;   
-    
-    
-}
-
-bool timesc_m(sycl::queue &q, double alpha, Matrix &A, Matrix &R)
-{
-    //check sizes..
-    if(!A.equal_dim(R)) return false;
-    //else...
-    
-    sycl::range<1> num_items{A.elem.size()};
-    //todo: how to host only one number ? 
-    DVector scal_vector = {alpha, 0.0};
-    
-    //hold data shared between host and devices
-    sycl::buffer a_buf(A.elem);
-    sycl::buffer r_buf(R.elem.data(), num_items);
-    
-    //scalar vector
-    sycl::buffer scal_buf(scal_vector);
-    
-    
-    //Submit data by lambda function, contains data access permition
-    q.submit([&](handler &h) {
-        sycl::accessor a(a_buf, h, read_only);
-        sycl::accessor r(r_buf, h, write_only, no_init);
-         
-        //buff scalar
-        sycl::accessor scal(scal_buf, h, read_only);
-        
-
-        h.parallel_for(num_items, [=](auto i){
-             r[i] = scal[0] * a[i];
-         });
-         
-    });
-    // Wait until compute tasks on GPU done
-    q.wait();     
-    
-    return true;
-    
-}
-
-// possivel implementacao da inversa:
-//A-1(i,j) = 1/detA * Cof(A(i,j))
-//todo: det. Leibniz? 
-
-
-//Cholesky parallel 
-bool cholesky_v1(sycl::queue q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
-    
-    
-    //check if there's a square Matrix declared: 
-    // if (!A_m.square_m() || !L_m.square_m() || !A_m.is_symmetric())
-    //{
-    //    std::cout << "\nMatrix not symmetric\n";
-    //    return 0;
-    //} 
-    // else ....
-    
-    size_t nr = A_m.n_row;
-    
-    //Set 2D buffers to host in devices
-    sycl::range<2> num_items{nr, nr};
-    
-    sycl::buffer<double,2> A_buf = {A_m.elem.data(), num_items};
-    sycl::buffer<double,2> L_buf = {L_m.elem.data(), num_items};
-    
-    //task A: copiar a matriz A em L - total de itens = nr*nr
-    auto eA = q.submit([&](handler &h) {
-
-        //declare accessor to buffers
-        sycl::accessor a{A_buf, h};
-        sycl::accessor l{L_buf, h};
-
-        h.parallel_for(num_items, [=](auto idx){       
-            int i = idx[0];
-            int j = idx[1];
-            if(i >= j) l[idx] = a[idx];
-            else l[idx] = 0.0;
-        });
-    });
-    q.wait();
-    
-    //print_m(L_m);
-    
-    //Algoritmo de Cholesky Incompleto, iterado ao longo de sua coluna
-    for(int itr = 0; itr < nr; itr++)
-    {
-        //print_m(L_m);
-        
-        //Range for division:
-        sycl::range<2>c_div{static_cast<unsigned long>(nr-(itr+1)),1};
-        
-        //sqrt in  l_kk of its diagonal entry
-        L_m.elem[nr*itr + itr] = sqrt(L_m.elem[nr*itr + itr]);
-        
-        //task B: calcular a coluna (a(i,j) /=a(j,j)
-        //for( i = k+1; i < n; i++)
-        auto eB = q.submit([&](handler &h) {
-
-            //declare accessor to buffers
-            sycl::accessor l{L_buf, h};
-            
-            int k = itr;        
-            
-            h.parallel_for(c_div, [=](auto idx){
-                int i = idx[0]+k+1;
-                int j = idx[1]+k;
-                l[i][j] /= l[k][k];                
-            });            
-        });
-        eB.wait();
-        
-        
-        //task C:Elimination B(i,j) -= B(i,k) * B.(j,k)
-    
-            for(int j = itr+1; j < nr; j++)
-            {
-                //Range for permutation:
-            sycl::range<2> c_mod{static_cast<unsigned long>(nr-j),1};
-                //for(int i = j_0; i < n; i++)
-                auto eC = q.submit([&](handler &h) {
-                    h.depends_on({eB});
-                        
-                    //declare accessor to buffers
-                    sycl::accessor l{L_buf, h};
-
-                    int k = itr;
-                    int j_0 = j; 
-                    
-                    h.parallel_for(c_mod, [=](auto idx){     
-                        int i = j_0 + idx[0];
-                        
-                        
-                        l[i][j_0] -= l[i][k] * l[j_0][k] ;
-
-                    });            
-
-                });
-                eC.wait();
-              
-                //print_m(L_m);
-            }       
-             
-    }
-    
-    
-    
-    
-    return true; 
-}
-
-
-// modificação da estrutura de paralelização
-bool cholesky_v2(sycl::queue q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
-    
-    
-    //check if there's a square Matrix declared: 
-    // if (!A_m.square_m() || !L_m.square_m() || !A_m.is_symmetric())
-    //{
-    //    std::cout << "\nMatrix not symmetric\n";
-    //    return 0;
-    //} 
-    // else ....
-    
-    size_t nr = A_m.n_row;
-    
-    //Set 2D buffers to host in devices
-    sycl::range<2> num_items{nr, nr};
-    
-    sycl::buffer<double,2> A_buf = {A_m.elem.data(), num_items};
-    sycl::buffer<double,2> L_buf = {L_m.elem.data(), num_items};
-    
-    //task A: copiar a matriz A em L - total de itens = nr*nr
-    auto eA = q.submit([&](handler &h) {
-
-        //declare accessor to buffers
-        sycl::accessor a{A_buf, h};
-        sycl::accessor l{L_buf, h};
-
-        h.parallel_for(num_items, [=](auto idx){       
-            int i = idx[0];
-            int j = idx[1];
-            if(i >= j) l[idx] = a[idx];
-            else l[idx] = 0.0;
-        });
-    });
-    q.wait();
-    
-    //print_m(L_m);
-    
-    //Algoritmo de Cholesky Incompleto, iterado ao longo de sua coluna
-    for(int itr = 0; itr < nr; itr++)
-    {
-        //print_m(L_m);
-        //Range for division:        
-        //sqrt in  l_kk of its diagonal entry
-        L_m.elem[nr*itr + itr] = sqrt(L_m.elem[nr*itr + itr]);
-        
-        //task B: calcular a coluna (a(i,j) /=a(j,j)
-        //for( i = k+1; i < n; i++)
-        auto eB = q.submit([&](handler &h) {
-
-            //declare accessor to buffers
-            sycl::accessor l{L_buf, h};
-            
-            int k = itr;        
-            
-           auto s_1 = h.parallel_for(
-               sycl::range{static_cast<unsigned long>(nr-(itr+1)),1}, [=](auto idx){
-                int i = idx[0]+k+1;
-                int j = idx[1]+k;
-                l[i][j] /= l[k][k]; 
-            });
-            
-                     
-            
-            
-        });
-                
-        //task C:Elimination B(i,j) -= B(i,k) * B.(j,k)
-    
-            for(int j = itr+1; j < nr; j++)
-            {
-                //Range for permutation:
-            //sycl::range<2> c_mod{static_cast<unsigned long>(nr-j),1};
-                //for(int i = j_0; i < n; i++)
-                auto eC = q.submit([&](handler &h) {
-                    h.depends_on({eB});
-                        
-                    //declare accessor to buffers
-                    sycl::accessor l{L_buf, h};
-
-                    int k = itr;
-                    int j_0 = j; 
-                    
-                    h.parallel_for(sycl::range{nr-j, 1}, [=](auto idx){     
-                        int i = j_0 + idx[0];
-                        
-                        
-                        l[i][j_0] -= l[i][k] * l[j_0][k] ;
-
-                    });            
-
-                });
-                eC.wait();
-              
-                //print_m(L_m);
-            }       
-             
-    }
-    
-    
-    
-    
-    return true; 
-}
-
 
 bool incomplete_cholesky(Matrix &A, Matrix &B)
 {
     
-    //if(!A.is_symmetric() || !A.is_square()) return false;
+    if(!A.is_symmetric() || !A.square_m()) return false;
 
-    //copy A and overwrite in B
-    //B.copy_of(A);
     B.elem.assign(A.elem.begin(),A.elem.end());
     int nr = A.n_row;
     int i, j, k;
-    for(k = 0; k < nr; k++)//for - sequencial
+    for(k = 0; k < nr; k++)
     {
-        //calculate principal diag. 
+        //calculate main diag. 
         B.elem[nr*k+k] = sqrt(B.elem[nr*k+k]);
 
         for(i = k+1; i < nr; i++){
-            //paralelo
+            
             if(B.elem[nr*i+k]!=0) B.elem[nr*i+k] /=  B.elem[nr*k+k]; 
         }
     
@@ -750,7 +429,6 @@ bool incomplete_cholesky(Matrix &A, Matrix &B)
 
     return true;
 }	
-
 
 
 void get_inversible_matrix(Matrix &A, double medium_val = 1000.0)

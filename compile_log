@@ -1,0 +1,44 @@
+Command failed: icpx /home/gustav/GitHub-Links/ParallelAlgebra/main.cpp -o /home/gustav/GitHub-Links/ParallelAlgebra/main -v
+Intel(R) oneAPI DPC++/C++ Compiler 2022.1.0 (2022.1.0.20220316)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/9
+Selected GCC installation: /usr/lib/gcc/x86_64-linux-gnu/9
+Candidate multilib: .;@m64
+Candidate multilib: 32;@m32
+Candidate multilib: x32;@mx32
+Selected multilib: .;@m64
+ "/opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/clang++" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name main.cpp -mrelocation-model static -fveclib=SVML -mframe-pointer=none -menable-no-infs -menable-no-nans -menable-unsafe-fp-math -fno-signed-zeros -mreassociate -freciprocal-math -fdenormal-fp-math=preserve-sign,preserve-sign -ffp-contract=fast -fno-rounding-math -ffast-math -ffinite-math-only -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -mllvm -x86-enable-unaligned-vector-move=true -tune-cpu generic -debugger-tuning=gdb -v -fcoverage-compilation-dir=/home/gustav -resource-dir /opt/intel/oneapi/compiler/2022.1.0/linux/lib/clang/14.0.0 -I/opt/intel/oneapi/vpl/2022.1.0/include -I/opt/intel/oneapi/tbb/2021.6.0/env/../include -I/opt/intel/oneapi/mpi/2021.6.0//include -I/opt/intel/oneapi/mkl/2022.1.0/include -I/opt/intel/oneapi/ipp/2021.6.0/include -I/opt/intel/oneapi/ippcp/2021.6.0/include -I/opt/intel/oneapi/ipp/2021.6.0/include -I/opt/intel/oneapi/dpl/2021.7.0/linux/include -I/opt/intel/oneapi/dpcpp-ct/2022.1.0/include -I/opt/intel/oneapi/dnnl/2022.1.0/cpu_dpcpp_gpu_dpcpp/include -I/opt/intel/oneapi/dev-utilities/2021.6.0/include -I/opt/intel/oneapi/dal/2021.6.0/include -I/opt/intel/oneapi/ccl/2021.6.0/include/cpu_gpu_dpcpp -cxx-isystem /opt/intel/oneapi/clck/2021.6.0/include -internal-isystem /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/../compiler/include -internal-isystem /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9 -internal-isystem /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/x86_64-linux-gnu/c++/9 -internal-isystem /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/backward -internal-isystem /opt/intel/oneapi/compiler/2022.1.0/linux/lib/clang/14.0.0/include -internal-isystem /usr/local/include -internal-isystem /usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -O2 -fdeprecated-macro -fdebug-compilation-dir=/home/gustav -ferror-limit 19 -fheinous-gnu-extensions -fgnuc-version=4.2.1 -fcxx-exceptions -fexceptions -vectorize-loops -vectorize-slp -D__GCC_HAVE_DWARF2_CFI_ASM=1 -fintel-compatibility -mllvm -disable-hir-generate-mkl-call -mllvm -intel-libirc-allowed -mllvm -loopopt=0 -floopopt-pipeline=none -mllvm -enable-lv -o /tmp/main-2aeab3.o -x c++ /home/gustav/GitHub-Links/ParallelAlgebra/main.cpp
+clang -cc1 version 14.0.0 based upon LLVM 14.0.0git default target x86_64-unknown-linux-gnu
+ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/9/../../../../x86_64-linux-gnu/include"
+ignoring nonexistent directory "/include"
+ignoring duplicate directory "/opt/intel/oneapi/ipp/2021.6.0/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /opt/intel/oneapi/vpl/2022.1.0/include
+ /opt/intel/oneapi/tbb/2021.6.0/env/../include
+ /opt/intel/oneapi/mpi/2021.6.0//include
+ /opt/intel/oneapi/mkl/2022.1.0/include
+ /opt/intel/oneapi/ipp/2021.6.0/include
+ /opt/intel/oneapi/ippcp/2021.6.0/include
+ /opt/intel/oneapi/dpl/2021.7.0/linux/include
+ /opt/intel/oneapi/dpcpp-ct/2022.1.0/include
+ /opt/intel/oneapi/dnnl/2022.1.0/cpu_dpcpp_gpu_dpcpp/include
+ /opt/intel/oneapi/dev-utilities/2021.6.0/include
+ /opt/intel/oneapi/dal/2021.6.0/include
+ /opt/intel/oneapi/ccl/2021.6.0/include/cpu_gpu_dpcpp
+ /opt/intel/oneapi/clck/2021.6.0/include
+ /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/../compiler/include
+ /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9
+ /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/x86_64-linux-gnu/c++/9
+ /usr/lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/backward
+ /opt/intel/oneapi/compiler/2022.1.0/linux/lib/clang/14.0.0/include
+ /usr/local/include
+ /usr/include/x86_64-linux-gnu
+ /usr/include
+End of search list.
+/home/gustav/GitHub-Links/ParallelAlgebra/main.cpp:2:10: fatal error: 'CL/sycl.hpp' file not found
+#include <CL/sycl.hpp>
+         ^~~~~~~~~~~~~
+1 error generated.

@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "all",
+			"command": "make all -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		},
+		{
+			"label": "run",
+			"command": "make run -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		},
+		{
+			"label": "all",
+			"command": "make all -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		}
+	]
+}

@@ -9,7 +9,7 @@
 //#include "matrices.hpp"
 
 
-void ekf_p(struct wm *wm, struct ss_d *ss)
+void ekf_p( wm *wm,  ss_d *ss)
 {
         // Declaration of the variables
         Matrix *x, *xp, *Phi, *Q, *P, *Pp;
@@ -35,7 +35,7 @@ void ekf_p(struct wm *wm, struct ss_d *ss)
         times_m(*Phi,*P,*PhiP);
         transp_m(*Phi,*Phi_T);
         times_m (*PhiP, *Phi_T, *PhiPPhi_T);
-        sum_m (*PhiPPhi_T,*Q,*Pp);
+        sum_m(*PhiPPhi_T,*Q,*Pp);
 
         delete PhiP;
         delete Phi_T;
