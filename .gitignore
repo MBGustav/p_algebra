@@ -1,5 +1,10 @@
 # test_file.cpp
 .vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
 vtune/*
 .ipynb_checkpoints/*
 launch-vtune.sh
