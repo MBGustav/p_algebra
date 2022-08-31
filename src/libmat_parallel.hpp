@@ -323,4 +323,101 @@ bool cholesky_v2(sycl::queue q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
 
 
 
+//Cholesky parallel 
+bool cholesky_v3(sycl::queue &q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
+    
+    
+    //check if there's a square Matrix declared: 
+    // if (!A_m.square_m() || !L_m.square_m() || !A_m.is_symmetric())
+    //{
+    //    std::cout << "\nMatrix not symmetric\n";
+    //    return 0;
+    //} 
+    // else ....
+    
+    //K represents iteration through this algorithm
+    int *k = malloc_shared<int>(1, q);
+    int *nr = malloc_shared<int>(1, q);
+    nr[0] = A_m.n_row;
+    
+    //Set 2D buffers to host in devices
+    sycl::range<2> num_items{static_cast<size_t>(nr[0]), static_cast<size_t>(nr[0])};
+    
+    // sycl::buffer<double,2> A_buf = {A_m.elem.data(), num_items};
+    //Create a buffer with A data.
+    sycl::buffer<double,2> L_buf = {A_m.elem.data(), num_items};
+
+
+    // buffer<int, 1> k(data, range<1>(nElems));
+
+        
+    //Algoritmo de Cholesky Incompleto, iterado ao longo de sua coluna
+    for(k[0] = 0; k[0] < nr[0]; k[0]++)
+    {        
+        //Range for division:
+        sycl::range<2>c_div{static_cast<unsigned long>(nr[0]-(k[0]+1)),1};
+        
+        //sqrt in  l_kk of its diagonal entry
+        auto eA = q.submit([&] (handler &h){
+            /*define parameters to send device*/
+            sycl::accessor L_acc{L_buf, h};
+            // sycl::accessor A_acc{A_buf, h};
+            int itr = k[0];
+            h.single_task([=](){L_acc[itr][itr] = sqrt(L_acc[itr][itr]);});
+        });
+        
+                
+        //task B: calcular a coluna (a(i,j) /=a(j,j)
+        //for( i = k+1; i < n; i++)
+        auto eB = q.submit([&](handler &h) {
+            h.depends_on(eA);
+            //declare accessor to buffers
+            sycl::accessor L_acc{L_buf, h};
+            //todo: verificar acesso de dados via Host
+            //todo: modificar sycl::range - decl. unica
+            int p = k[0];
+            h.parallel_for(c_div, [=](auto idx){
+                int i = idx[0]+p+1;
+                int j = idx[1]+p;
+                L_acc[i][j] /= L_acc[p][p];                
+            });            
+        });
+        // eB.wait();
+        
+        //task C:Elimination B(i,j) -= B(i,k) * B.(j,k)
+    
+            for(int j = k[0]+1; j < nr[0]; j++)
+            {
+                //Range for permutation:
+            sycl::range<2> c_mod{static_cast<unsigned long>(nr[0]-j),1};
+                //for(int i = j_0; i < n; i++)
+                auto eC = q.submit([&](handler &h) {
+                    h.depends_on({eB});
+                        
+                    //declare accessor to buffers
+                    sycl::accessor L_acc{L_buf, h};
+
+                    int p = k[0];
+                    int j_0 = j; 
+                    
+                    h.parallel_for(c_mod, [=](auto idx){     
+                        int i = j_0 + idx[0];
+                        
+                        
+                        L_acc[i][j_0] -= L_acc[i][p] * L_acc[j_0][p] ;
+
+                    });            
+
+                });
+                eC.wait();
+              
+                //print_m(L_m);
+            }       
+             
+    }
+    
+    return true; 
+}
+
+
 #endif// LIBMAT_PARALLEL_HPP
