@@ -1,0 +1,11 @@
+# test_file.cpp
+.vscode/*
+vtune/*
+.ipynb_checkpoints/*
+launch-vtune.sh
+*.o
+
+# Ignore files without extension..
+*
+!/**/
+!*.*
