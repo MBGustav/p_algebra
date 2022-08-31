@@ -24,6 +24,54 @@
 			"options": {
 				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
 			}
+		},
+		{
+			"label": "all",
+			"command": "make all -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		},
+		{
+			"label": "all",
+			"command": "make all -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		},
+		{
+			"label": "run",
+			"command": "make run -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		},
+		{
+			"label": "all",
+			"command": "make all -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		},
+		{
+			"label": "run",
+			"command": "make run -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
+		},
+		{
+			"label": "test",
+			"command": "make test -f /home/gustav/GitHub-Links/ParallelAlgebra/Makefile",
+			"type": "shell",
+			"options": {
+				"cwd": "/home/gustav/GitHub-Links/ParallelAlgebra"
+			}
 		}
 	]
 }

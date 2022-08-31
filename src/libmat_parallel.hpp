@@ -251,80 +251,15 @@ bool cholesky_v1(sycl::queue &q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
                 //print_m(L_m);
             }       
              
-    }
+    }   
     
-    
-    
-    
-    return true; 
-}
-
-
-// modificação da estrutura de paralelização
-bool cholesky_v2(sycl::queue q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
-    
-    
-    //check if there's a square Matrix declared: 
-    // if (!A_m.square_m() || !L_m.square_m() || !A_m.is_symmetric())
-    //{
-    //    std::cout << "\nMatrix not symmetric\n";
-    //    return 0;
-    //} 
-    // else ....
-
-    size_t nr =  A_m.size();
-
-
-    size_t row = A_m.n_row;
-    size_t col = A_m.n_col;
-    print_m(A_m);
-    //copy Matrix A --> L (in device)
-    double *device_array = malloc_device<double>(nr, q);
-    // auto beg = std::chrono::high_resolution_clock::now();
-    auto eA = q.submit([&](handler &h) 
-    {
-        h.memcpy(device_array, A_m.elem.data(), nr * sizeof(double));
-    });
-    
-    for(int k = 0; k < row;k++ ){
-        auto eB =  q.submit([&](handler &h) {
-            h.depends_on(eA);
-            
-
-                //sycl::range<2>c_div{static_cast<unsigned long>(nr-(k+1)),1};
-                h.parallel_for((col-(k+1)), [=](auto idx)
-                {
-                    int i_idx = idx[0]+1+k;
-                    int j = k;
-                    int iDiag = row*k+k;
-                    int iU = row*i_idx+j;
-                    device_array[iU] /= device_array[iDiag];
-                });        
-        });
-        eB.wait();
-    }
-    
-    // auto end = std::chrono::high_resolution_clock::now();
-    // double time = std::chrono::duration_cast<std::chrono::duration<double>>(end - beg).count();
-    // std::cout << "Array\n";
-    for(int i = 0; i < row; i++){
-        for(int j = 0; j < row; j++){
-            L_m.elem[row*i+j] = device_array[row*i+j];
-            std::cout << L_m.elem[row*i+j] << " ";
-        }
-        std::cout  << "\n";
-    }
-
-    free(device_array, q);
-    
-
     return true; 
 }
 
 
 
 //Cholesky parallel 
-bool cholesky_v3(sycl::queue &q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
+bool cholesky_v2(sycl::queue &q, Matrix &A_m, Matrix &L_m, double alpha = 1.0){
     
     
     //check if there's a square Matrix declared: 
